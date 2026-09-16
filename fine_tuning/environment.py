@@ -4,6 +4,7 @@ import argparse
 import importlib.metadata
 import json
 import platform
+import sys
 import typing
 from pathlib import Path
 
@@ -13,30 +14,41 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
+def select_torch_device(requested_device: str) -> torch.device:
+    """Выбрать CPU или доступный GPU backend для значения auto/cpu/gpu."""
+    if requested_device == "cpu":
+        return torch.device("cpu")
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if torch.xpu.is_available():
+        return torch.device("xpu")
+    if requested_device == "gpu":
+        message: typing.Final = "GPU недоступен. Повторите с --device cpu или --device auto."
+        raise RuntimeError(message)
+    return torch.device("cpu")
+
+
 def inspect_environment(model_path: Path, requested_device: str) -> dict[str, object]:
     """Загрузить модель, проверить chat template, модули LoRA и короткую генерацию."""
     mps_available: typing.Final = torch.backends.mps.is_available()
-    device_name: typing.Final = (
-        ("mps" if mps_available else "cpu") if requested_device == "auto" else requested_device
-    )
-    if device_name == "mps" and not mps_available:
-        raise RuntimeError("MPS недоступен. Повторите с --device cpu.")
-    device: typing.Final = torch.device(device_name)
+    device: typing.Final = select_torch_device(requested_device)
     if not model_path.is_dir():
-        raise FileNotFoundError(
-            f"Нет локальной модели: {model_path}. Выполните just download_model."
-        )
+        message = f"Нет локальной модели: {model_path}. Выполните just download_model."
+        raise FileNotFoundError(message)
 
     # float32 — консервативный вариант для первого небольшого LoRA-эксперимента.
     dtype: typing.Final = torch.float32
     tokenizer: typing.Final = typing.cast(
-        typing.Any,
+        "typing.Any",
         AutoTokenizer.from_pretrained(model_path, local_files_only=True, trust_remote_code=False),
     )
     if not tokenizer.chat_template:
-        raise ValueError("У tokenizer нет chat template.")
+        message = "У tokenizer нет chat template."
+        raise ValueError(message)
     model: typing.Final = typing.cast(
-        typing.Any,
+        "typing.Any",
         AutoModelForCausalLM.from_pretrained(
             model_path,
             local_files_only=True,
@@ -51,10 +63,11 @@ def inspect_environment(model_path: Path, requested_device: str) -> dict[str, ob
     module_names: typing.Final = {name.rsplit(".", 1)[-1] for name, _ in model.named_modules()}
     missing_modules: typing.Final = {"q_proj", "v_proj"} - module_names
     if missing_modules:
-        raise ValueError(f"В модели нет модулей LoRA: {sorted(missing_modules)}")
+        message = f"В модели нет модулей LoRA: {sorted(missing_modules)}"
+        raise ValueError(message)
 
     inputs = typing.cast(
-        dict[str, torch.Tensor],
+        "dict[str, torch.Tensor]",
         tokenizer.apply_chat_template(
             [{"role": "user", "content": "Ответь одним словом: привет!"}],
             tokenize=True,
@@ -74,17 +87,19 @@ def inspect_environment(model_path: Path, requested_device: str) -> dict[str, ob
     if device.type == "mps":
         torch.mps.synchronize()
     answer: typing.Final = typing.cast(
-        str,
+        "str",
         tokenizer.decode(generated[0, inputs["input_ids"].shape[1] :], skip_special_tokens=True),
     )
     if not answer.strip():
-        raise RuntimeError("Проверочная генерация не вернула текста.")
+        message = "Проверочная генерация не вернула текста."
+        raise RuntimeError(message)
 
     # Проверка autograd на устройстве, без изменения весов модели.
     probe: typing.Final = torch.ones(2, device=device, requires_grad=True)
     probe.square().sum().backward()
     if probe.grad is None or not torch.isfinite(probe.grad).all().item():
-        raise RuntimeError("Проверка autograd не пройдена.")
+        message = "Проверка autograd не пройдена."
+        raise RuntimeError(message)
     cpu_available: typing.Final = torch.ones(1, device="cpu").item() == 1.0
     memory: typing.Final = psutil.virtual_memory()
     return {
@@ -119,16 +134,17 @@ def inspect_environment(model_path: Path, requested_device: str) -> dict[str, ob
     }
 
 
-def main() -> None:
+def run_environment_inspection_cli() -> None:
+    """Разобрать аргументы CLI, проверить окружение и вывести JSON-сводку."""
     parser: typing.Final = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--model-path", type=Path, default=Path("data/models/base/Qwen2.5-0.5B-Instruct")
     )
-    parser.add_argument("--device", choices=("auto", "mps", "cpu"), default="auto")
+    parser.add_argument("--device", choices=("auto", "cpu", "gpu"), default="auto")
     args: typing.Final = parser.parse_args()
     report: typing.Final = inspect_environment(args.model_path, args.device)
-    print(json.dumps(report, ensure_ascii=False, indent=2))
+    sys.stdout.write(f"{json.dumps(report, ensure_ascii=False, indent=2)}\n")
 
 
 if __name__ == "__main__":
-    main()
+    run_environment_inspection_cli()
