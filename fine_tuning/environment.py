@@ -1,0 +1,134 @@
+"""Проверка окружения и локальной модели без обучения и сетевых запросов."""
+
+import argparse
+import importlib.metadata
+import json
+import platform
+import typing
+from pathlib import Path
+
+import peft
+import psutil
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+
+def inspect_environment(model_path: Path, requested_device: str) -> dict[str, object]:
+    """Загрузить модель, проверить chat template, модули LoRA и короткую генерацию."""
+    mps_available: typing.Final = torch.backends.mps.is_available()
+    device_name: typing.Final = (
+        ("mps" if mps_available else "cpu") if requested_device == "auto" else requested_device
+    )
+    if device_name == "mps" and not mps_available:
+        raise RuntimeError("MPS недоступен. Повторите с --device cpu.")
+    device: typing.Final = torch.device(device_name)
+    if not model_path.is_dir():
+        raise FileNotFoundError(
+            f"Нет локальной модели: {model_path}. Выполните just download_model."
+        )
+
+    # float32 — консервативный вариант для первого небольшого LoRA-эксперимента.
+    dtype: typing.Final = torch.float32
+    tokenizer: typing.Final = typing.cast(
+        typing.Any,
+        AutoTokenizer.from_pretrained(model_path, local_files_only=True, trust_remote_code=False),
+    )
+    if not tokenizer.chat_template:
+        raise ValueError("У tokenizer нет chat template.")
+    model: typing.Final = typing.cast(
+        typing.Any,
+        AutoModelForCausalLM.from_pretrained(
+            model_path,
+            local_files_only=True,
+            trust_remote_code=False,
+            dtype=dtype,
+            attn_implementation="eager",
+        ),
+    ).to(device)
+    model.eval()
+
+    # Проверяем совместимость с выбранными target_modules, не создавая адаптер.
+    module_names: typing.Final = {name.rsplit(".", 1)[-1] for name, _ in model.named_modules()}
+    missing_modules: typing.Final = {"q_proj", "v_proj"} - module_names
+    if missing_modules:
+        raise ValueError(f"В модели нет модулей LoRA: {sorted(missing_modules)}")
+
+    inputs = typing.cast(
+        dict[str, torch.Tensor],
+        tokenizer.apply_chat_template(
+            [{"role": "user", "content": "Ответь одним словом: привет!"}],
+            tokenize=True,
+            add_generation_prompt=True,
+            return_dict=True,
+            return_tensors="pt",
+        ),
+    )
+    inputs = {name: tensor.to(device) for name, tensor in inputs.items()}
+    with torch.inference_mode():
+        generated: typing.Final = model.generate(
+            **inputs,
+            do_sample=False,
+            max_new_tokens=8,
+            pad_token_id=tokenizer.eos_token_id,
+        )
+    if device.type == "mps":
+        torch.mps.synchronize()
+    answer: typing.Final = typing.cast(
+        str,
+        tokenizer.decode(generated[0, inputs["input_ids"].shape[1] :], skip_special_tokens=True),
+    )
+    if not answer.strip():
+        raise RuntimeError("Проверочная генерация не вернула текста.")
+
+    # Проверка autograd на устройстве, без изменения весов модели.
+    probe: typing.Final = torch.ones(2, device=device, requires_grad=True)
+    probe.square().sum().backward()
+    if probe.grad is None or not torch.isfinite(probe.grad).all().item():
+        raise RuntimeError("Проверка autograd не пройдена.")
+    cpu_available: typing.Final = torch.ones(1, device="cpu").item() == 1.0
+    memory: typing.Final = psutil.virtual_memory()
+    return {
+        "python": platform.python_version(),
+        "platform": platform.platform(),
+        "architecture": platform.machine(),
+        "libraries": {
+            name: importlib.metadata.version(name)
+            for name in ("torch", "transformers", "peft", "accelerate", "huggingface-hub", "pyyaml")
+        },
+        "cuda_available": torch.cuda.is_available(),
+        "mps_available": mps_available,
+        "xpu_available": torch.xpu.is_available(),
+        "cpu_available": cpu_available,
+        "selected_device": device.type,
+        "selected_dtype": str(dtype),
+        "system_memory_gib": round(memory.total / 1024**3, 2),
+        "available_system_memory_gib": round(memory.available / 1024**3, 2),
+        "mps_recommended_memory_gib": (
+            round(torch.mps.recommended_max_memory() / 1024**3, 2) if mps_available else None
+        ),
+        "model_path": str(model_path.resolve()),
+        "model_exists": True,
+        "tokenizer_loaded": True,
+        "model_loaded": True,
+        "parameter_count": sum(parameter.numel() for parameter in model.parameters()),
+        "lora_target_modules_found": ["q_proj", "v_proj"],
+        "peft_available": hasattr(peft, "get_peft_model"),
+        "generation_check": answer,
+        "autograd_check": True,
+        "training_performed": False,
+    }
+
+
+def main() -> None:
+    parser: typing.Final = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--model-path", type=Path, default=Path("data/models/base/Qwen2.5-0.5B-Instruct")
+    )
+    parser.add_argument("--device", choices=("auto", "mps", "cpu"), default="auto")
+    args: typing.Final = parser.parse_args()
+    report: typing.Final = inspect_environment(args.model_path, args.device)
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
+    main()

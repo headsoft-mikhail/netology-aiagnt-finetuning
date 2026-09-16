@@ -1,0 +1,16 @@
+.DS_Store
+.venv/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.ty_cache/
+.ipynb_checkpoints/
+data/models/base/*
+!data/models/base/.gitkeep
+data/models/adapters/*
+!data/models/adapters/.gitkeep
+data/fine_tuning/runs/*
+!data/fine_tuning/runs/.gitkeep
