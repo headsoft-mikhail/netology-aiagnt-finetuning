@@ -38,3 +38,6 @@ inspect_env device="auto":
 
 validate_data:
     uv run python -m fine_tuning.dataset
+
+validate_config:
+    uv run python -m fine_tuning.config --config config/fine_tuning.yaml
