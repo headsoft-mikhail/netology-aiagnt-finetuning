@@ -97,6 +97,27 @@ class FineTuningDatasetManager:
 
     def validate_and_summarize(self) -> ValidationReport:
         """Загрузить оба набора, выполнить все проверки и вернуть сводку."""
+        validated_splits: typing.Final = self.load_and_validate()
+        tokenizer: typing.Final = self._load_tokenizer()
+        lengths: typing.Final = {
+            split: [self._count_message_tokens(tokenizer, example.messages) for example in examples]
+            for split, examples in validated_splits.items()
+        }
+        return {
+            "valid": True,
+            "train_examples": len(validated_splits["train"]),
+            "eval_examples": len(validated_splits["eval"]),
+            "system_prompt": validated_splits["train"][0].system_prompt,
+            "max_seq_length": self.max_seq_length,
+            "train_tokens": {"min": min(lengths["train"]), "max": max(lengths["train"])},
+            "eval_tokens": {"min": min(lengths["eval"]), "max": max(lengths["eval"])},
+            "id_overlap": 0,
+            "dialogue_overlap": 0,
+            "user_prompt_overlap": 0,
+        }
+
+    def load_and_validate(self) -> dict[str, list[ValidatedExample]]:
+        """Загрузить train/eval, выполнить проверки и вернуть готовые примеры."""
         self._validate_settings()
         raw_splits: typing.Final = {
             "train": self._load_jsonl(self.train_path),
@@ -105,25 +126,14 @@ class FineTuningDatasetManager:
         validated_splits: typing.Final = {
             split: self._validate_split(split, examples) for split, examples in raw_splits.items()
         }
-        system_prompt: typing.Final = self._validate_relationship_between_splits(validated_splits)
+        self._validate_relationship_between_splits(validated_splits)
         tokenizer: typing.Final = self._load_tokenizer()
         lengths: typing.Final = {
             split: [self._count_message_tokens(tokenizer, example.messages) for example in examples]
             for split, examples in validated_splits.items()
         }
         self._reject_overlong_examples(validated_splits, lengths)
-        return {
-            "valid": True,
-            "train_examples": len(validated_splits["train"]),
-            "eval_examples": len(validated_splits["eval"]),
-            "system_prompt": system_prompt,
-            "max_seq_length": self.max_seq_length,
-            "train_tokens": {"min": min(lengths["train"]), "max": max(lengths["train"])},
-            "eval_tokens": {"min": min(lengths["eval"]), "max": max(lengths["eval"])},
-            "id_overlap": 0,
-            "dialogue_overlap": 0,
-            "user_prompt_overlap": 0,
-        }
+        return validated_splits
 
     def _validate_settings(self) -> None:
         """Проверить настройки, необходимые для валидации."""

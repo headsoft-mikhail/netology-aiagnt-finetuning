@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "stage": "training",
+  "config": {
+    "run": {
+      "name": "support_lora_minimal",
+      "seed": 42
+    },
+    "paths": {
+      "train_dataset": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/train.jsonl",
+      "eval_dataset": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/eval.jsonl",
+      "base_model": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/models/base/Qwen2.5-0.5B-Instruct",
+      "runs": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/runs",
+      "adapters": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/models/adapters",
+      "reports": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/reports"
+    },
+    "model": {
+      "name": "Qwen/Qwen2.5-0.5B-Instruct",
+      "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
+      "device": "auto",
+      "dtype": "float32",
+      "max_seq_length": 512,
+      "trust_remote_code": false
+    },
+    "lora": {
+      "method": "lora",
+      "r": 8,
+      "lora_alpha": 16,
+      "lora_dropout": 0.05,
+      "bias": "none",
+      "target_modules": [
+        "q_proj",
+        "v_proj"
+      ]
+    },
+    "training": {
+      "learning_rate": 0.0002,
+      "lr_scheduler_type": "linear",
+      "optimizer": "adamw_torch",
+      "weight_decay": 0.0,
+      "max_grad_norm": 1.0,
+      "per_device_train_batch_size": 1,
+      "per_device_eval_batch_size": 1,
+      "gradient_accumulation_steps": 4,
+      "num_train_epochs": 2,
+      "warmup_steps": 0.03,
+      "logging_strategy": "steps",
+      "logging_steps": 1,
+      "eval_strategy": "epoch",
+      "save_strategy": "epoch",
+      "save_total_limit": 1,
+      "gradient_checkpointing": false,
+      "report_to": "none"
+    },
+    "generation": {
+      "do_sample": false,
+      "max_new_tokens": 128
+    }
+  },
+  "device": "mps",
+  "baseline_eval_loss": 1.7137167572975158,
+  "tuned_eval_loss_before_reload": 1.4528391361236572,
+  "train_metrics": {
+    "train_runtime": 26.7777,
+    "train_samples_per_second": 2.39,
+    "train_steps_per_second": 0.598,
+    "total_flos": 10705849600512.0,
+    "train_loss": 1.342125866562128,
+    "epoch": 2.0
+  },
+  "global_step": 16,
+  "epoch": 2.0,
+  "training_seconds": 26.983252250007354,
+  "trainable_parameters": 540672,
+  "total_parameters": 494573440,
+  "trainable_percentage": 0.1093208725482711,
+  "masking": {
+    "ignore_index": -100,
+    "prompt_and_padding_excluded_from_loss": true,
+    "assistant_tokens_in_loss": true,
+    "examples_checked": 37,
+    "assistant_tokens": {
+      "min": 23,
+      "max": 53
+    },
+    "first_example": {
+      "id": "train_001",
+      "prompt_tokens": 42,
+      "assistant_tokens": 53,
+      "total_tokens": 95
+    }
+  },
+  "log_history": [
+    {
+      "loss": 1.4895521402359009,
+      "grad_norm": 2.2523250579833984,
+      "learning_rate": 0.0,
+      "epoch": 0.125,
+      "step": 1
+    },
+    {
+      "loss": 1.2526553869247437,
+      "grad_norm": 1.9322603940963745,
+      "learning_rate": 0.0002,
+      "epoch": 0.25,
+      "step": 2
+    },
+    {
+      "loss": 1.3682138919830322,
+      "grad_norm": 1.9129823446273804,
+      "learning_rate": 0.0001866666666666667,
+      "epoch": 0.375,
+      "step": 3
+    },
+    {
+      "loss": 1.7540624141693115,
+      "grad_norm": 2.3707921504974365,
+      "learning_rate": 0.00017333333333333334,
+      "epoch": 0.5,
+      "step": 4
+    },
+    {
+      "loss": 1.3866448402404785,
+      "grad_norm": 2.180499792098999,
+      "learning_rate": 0.00016,
+      "epoch": 0.625,
+      "step": 5
+    },
+    {
+      "loss": 1.3394056558609009,
+      "grad_norm": 2.249596118927002,
+      "learning_rate": 0.00014666666666666666,
+      "epoch": 0.75,
+      "step": 6
+    },
+    {
+      "loss": 1.311503291130066,
+      "grad_norm": 1.9845136404037476,
+      "learning_rate": 0.00013333333333333334,
+      "epoch": 0.875,
+      "step": 7
+    },
+    {
+      "loss": 1.4095205068588257,
+      "grad_norm": 2.231135606765747,
+      "learning_rate": 0.00012,
+      "epoch": 1.0,
+      "step": 8
+    },
+    {
+      "eval_loss": 1.5219557285308838,
+      "eval_runtime": 0.7221,
+      "eval_samples_per_second": 6.924,
+      "eval_steps_per_second": 6.924,
+      "epoch": 1.0,
+      "step": 8
+    },
+    {
+      "loss": 1.143856406211853,
+      "grad_norm": 1.672626256942749,
+      "learning_rate": 0.00010666666666666667,
+      "epoch": 1.125,
+      "step": 9
+    },
+    {
+      "loss": 1.5739688873291016,
+      "grad_norm": 2.311051368713379,
+      "learning_rate": 9.333333333333334e-05,
+      "epoch": 1.25,
+      "step": 10
+    },
+    {
+      "loss": 1.9240736961364746,
+      "grad_norm": 3.0752551555633545,
+      "learning_rate": 8e-05,
+      "epoch": 1.375,
+      "step": 11
+    },
+    {
+      "loss": 0.8025346398353577,
+      "grad_norm": 1.3072402477264404,
+      "learning_rate": 6.666666666666667e-05,
+      "epoch": 1.5,
+      "step": 12
+    },
+    {
+      "loss": 1.124639868736267,
+      "grad_norm": 1.6473908424377441,
+      "learning_rate": 5.333333333333333e-05,
+      "epoch": 1.625,
+      "step": 13
+    },
+    {
+      "loss": 1.453439712524414,
+      "grad_norm": 2.072796106338501,
+      "learning_rate": 4e-05,
+      "epoch": 1.75,
+      "step": 14
+    },
+    {
+      "loss": 1.2091227769851685,
+      "grad_norm": 2.385380983352661,
+      "learning_rate": 2.6666666666666667e-05,
+      "epoch": 1.875,
+      "step": 15
+    },
+    {
+      "loss": 0.9308197498321533,
+      "grad_norm": 1.668694257736206,
+      "learning_rate": 1.3333333333333333e-05,
+      "epoch": 2.0,
+      "step": 16
+    },
+    {
+      "eval_loss": 1.4528391361236572,
+      "eval_runtime": 0.7262,
+      "eval_samples_per_second": 6.885,
+      "eval_steps_per_second": 6.885,
+      "epoch": 2.0,
+      "step": 16
+    },
+    {
+      "train_runtime": 26.7777,
+      "train_samples_per_second": 2.39,
+      "train_steps_per_second": 0.598,
+      "total_flos": 10705849600512.0,
+      "train_loss": 1.342125866562128,
+      "epoch": 2.0,
+      "step": 16
+    },
+    {
+      "eval_loss": 1.4528391361236572,
+      "eval_runtime": 0.6983,
+      "eval_samples_per_second": 7.16,
+      "eval_steps_per_second": 7.16,
+      "epoch": 2.0,
+      "step": 16
+    }
+  ],
+  "checkpoints": [
+    "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/runs/support_lora_minimal/checkpoint-16"
+  ],
+  "adapter_path": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/models/adapters/support_lora_minimal",
+  "baseline_report_path": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/reports/baseline_report.json"
+}

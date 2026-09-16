@@ -41,3 +41,6 @@ validate_data:
 
 validate_config:
     uv run python -m fine_tuning.config --config config/fine_tuning.yaml
+
+train config="config/fine_tuning.yaml":
+    uv run python -m fine_tuning.train --config {{config}}

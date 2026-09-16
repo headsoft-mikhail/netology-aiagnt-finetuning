@@ -64,16 +64,22 @@ class TrainingSettings:
     """Параметры Trainer для минимального учебного запуска."""
 
     learning_rate: float
+    lr_scheduler_type: str
+    optimizer: str
+    weight_decay: float
+    max_grad_norm: float
     per_device_train_batch_size: int
     per_device_eval_batch_size: int
     gradient_accumulation_steps: int
     num_train_epochs: int
-    warmup_ratio: float
+    warmup_steps: float
+    logging_strategy: str
     logging_steps: int
     eval_strategy: str
     save_strategy: str
     save_total_limit: int
     gradient_checkpointing: bool
+    report_to: str
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -198,13 +204,29 @@ class FineTuningConfigManager:
 
     def _build_training_settings(self, section: ConfigSection) -> TrainingSettings:
         """Проверить секцию training и построить её настройки."""
+        lr_scheduler_type: typing.Final = self._require_string(
+            section, "lr_scheduler_type", "training"
+        )
+        optimizer: typing.Final = self._require_string(section, "optimizer", "training")
+        logging_strategy: typing.Final = self._require_string(
+            section, "logging_strategy", "training"
+        )
         eval_strategy: typing.Final = self._require_string(section, "eval_strategy", "training")
         save_strategy: typing.Final = self._require_string(section, "save_strategy", "training")
+        report_to: typing.Final = self._require_string(section, "report_to", "training")
         allowed_strategies: typing.Final = {"no", "steps", "epoch"}
+        self._require_choice(lr_scheduler_type, "training.lr_scheduler_type", {"linear"})
+        self._require_choice(optimizer, "training.optimizer", {"adamw_torch"})
+        self._require_choice(logging_strategy, "training.logging_strategy", {"steps"})
         self._require_choice(eval_strategy, "training.eval_strategy", allowed_strategies)
         self._require_choice(save_strategy, "training.save_strategy", allowed_strategies)
+        self._require_choice(report_to, "training.report_to", {"none"})
         return TrainingSettings(
             learning_rate=self._require_positive_float(section, "learning_rate", "training"),
+            lr_scheduler_type=lr_scheduler_type,
+            optimizer=optimizer,
+            weight_decay=self._require_nonnegative_float(section, "weight_decay", "training"),
+            max_grad_norm=self._require_positive_float(section, "max_grad_norm", "training"),
             per_device_train_batch_size=self._require_positive_int(
                 section, "per_device_train_batch_size", "training"
             ),
@@ -215,7 +237,8 @@ class FineTuningConfigManager:
                 section, "gradient_accumulation_steps", "training"
             ),
             num_train_epochs=self._require_positive_int(section, "num_train_epochs", "training"),
-            warmup_ratio=self._require_ratio(section, "warmup_ratio", "training"),
+            warmup_steps=self._require_ratio(section, "warmup_steps", "training"),
+            logging_strategy=logging_strategy,
             logging_steps=self._require_positive_int(section, "logging_steps", "training"),
             eval_strategy=eval_strategy,
             save_strategy=save_strategy,
@@ -223,6 +246,7 @@ class FineTuningConfigManager:
             gradient_checkpointing=self._require_bool(
                 section, "gradient_checkpointing", "training"
             ),
+            report_to=report_to,
         )
 
     def _build_generation_settings(self, section: ConfigSection) -> GenerationSettings:
@@ -297,6 +321,15 @@ class FineTuningConfigManager:
         value: typing.Final = section.get(key)
         if isinstance(value, bool) or not isinstance(value, int | float) or value <= 0:
             message: typing.Final = f"{section_name}.{key} должен быть положительным числом"
+            raise ConfigValidationError(message)
+        return float(value)
+
+    @staticmethod
+    def _require_nonnegative_float(section: ConfigSection, key: str, section_name: str) -> float:
+        """Получить неотрицательное вещественное число."""
+        value: typing.Final = section.get(key)
+        if isinstance(value, bool) or not isinstance(value, int | float) or value < 0:
+            message: typing.Final = f"{section_name}.{key} должен быть неотрицательным числом"
             raise ConfigValidationError(message)
         return float(value)
 

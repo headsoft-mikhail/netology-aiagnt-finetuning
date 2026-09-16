@@ -116,6 +116,7 @@ fine_tuning/
   config.py
   dataset.py
   environment.py
+  train.py
 config/
   fine_tuning.yaml
 data/
@@ -190,7 +191,43 @@ just validate_config
 данным, локальной модели и `max_seq_length` именно из YAML.
 
 Для первого запуска зафиксированы LoRA `r=8`, `lora_alpha=16`,
-`lora_dropout=0.05` для
-`q_proj` и `v_proj`; learning rate `0.0002`, batch size `1`, gradient
+`lora_dropout=0.05` для `q_proj` и `v_proj`; learning rate `0.0002`, batch size `1`, gradient
 accumulation `4`, две эпохи, сохранение и evaluation по эпохам. Генерация до и
 после обучения будет одинаковой: `do_sample=false`, `max_new_tokens=128`.
+
+## Baseline и LoRA-обучение
+
+Полный четвёртый шаг запускается из корня проекта:
+
+```bash
+just train
+```
+
+Команда сначала загружает неизменённую базовую модель, считает baseline eval loss
+и генерирует ответы на все пять eval-запросов. В модель передаются только system
+и user; эталонный assistant используется для loss и сохраняется рядом с ответом
+для последующего сравнения. Ручные поля `passed` и `reason` остаются `null`.
+
+`AssistantResponseDataset` применяет chat template отдельно к prompt и полному
+диалогу и проверяет, что prompt является точным префиксом. В `labels` токены
+system/user и padding заменяются на `-100`; в loss остаются только 23–53 токена
+assistant. Эта проверка выполнена для всех 37 train/eval-примеров до обучения.
+
+После baseline подключается LoRA для `q_proj` и `v_proj`. Обучаемыми стали
+540 672 из 494 573 440 параметров, или 0,1093%; остальные параметры заморожены.
+Фактический запуск на MPS выполнил 16 шагов оптимизации за две эпохи примерно за
+27 секунд. Training loss за запуск составил 1,3421. Baseline eval loss равен
+1,7137, eval loss адаптера в памяти после обучения — 1,4528.
+
+Созданные артефакты:
+
+- `data/fine_tuning/reports/baseline_report.json` — исходные ответы и loss;
+- `data/fine_tuning/reports/training_report.json` — конфигурация, masking,
+  параметры, метрики и полный log history;
+- `data/fine_tuning/runs/support_lora_minimal/checkpoint-16/` — Trainer checkpoint
+  с adapter, optimizer, scheduler, RNG и состоянием Trainer;
+- `data/models/adapters/support_lora_minimal/` — финальный adapter и tokenizer.
+
+Checkpoint и adapter исключены из Git из-за бинарных файлов. На шаге 5 adapter
+будет заново загружен с диска вместе с чистой базовой моделью, после чего ответы
+будут сгенерированы с теми же параметрами.
