@@ -1,0 +1,377 @@
+{
+  "schema_version": 1,
+  "stage": "comparison",
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
+  "seed": 42,
+  "config": {
+    "run": {
+      "name": "support_lora_minimal",
+      "seed": 42
+    },
+    "paths": {
+      "train_dataset": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/train.jsonl",
+      "eval_dataset": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/eval.jsonl",
+      "base_model": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/models/base/Qwen2.5-0.5B-Instruct",
+      "runs": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/runs",
+      "adapters": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/models/adapters",
+      "reports": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/reports"
+    },
+    "model": {
+      "name": "Qwen/Qwen2.5-0.5B-Instruct",
+      "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
+      "device": "auto",
+      "dtype": "float32",
+      "max_seq_length": 512,
+      "trust_remote_code": false
+    },
+    "lora": {
+      "method": "lora",
+      "r": 8,
+      "lora_alpha": 16,
+      "lora_dropout": 0.05,
+      "bias": "none",
+      "target_modules": [
+        "q_proj",
+        "v_proj"
+      ]
+    },
+    "training": {
+      "learning_rate": 0.0002,
+      "lr_scheduler_type": "linear",
+      "optimizer": "adamw_torch",
+      "weight_decay": 0.0,
+      "max_grad_norm": 1.0,
+      "per_device_train_batch_size": 1,
+      "per_device_eval_batch_size": 1,
+      "gradient_accumulation_steps": 4,
+      "num_train_epochs": 2,
+      "warmup_steps": 0.03,
+      "logging_strategy": "steps",
+      "logging_steps": 1,
+      "eval_strategy": "epoch",
+      "save_strategy": "epoch",
+      "save_total_limit": 1,
+      "gradient_checkpointing": false,
+      "report_to": "none"
+    },
+    "generation": {
+      "do_sample": false,
+      "max_new_tokens": 128
+    }
+  },
+  "environment": {
+    "python": "3.12.14",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "device": "mps",
+    "dtype": "float32",
+    "libraries": {
+      "torch": "2.14.0",
+      "transformers": "5.17.0",
+      "peft": "0.21.0",
+      "accelerate": "1.15.0"
+    }
+  },
+  "dataset": {
+    "train_examples": 32,
+    "eval_examples": 5
+  },
+  "generation": {
+    "do_sample": false,
+    "max_new_tokens": 128
+  },
+  "metrics": {
+    "baseline": {
+      "eval_loss": 1.7137167572975158,
+      "perplexity": 5.5495495222254,
+      "perplexity_overflow": false,
+      "passed": 0,
+      "pass_rate": 0.0
+    },
+    "tuned": {
+      "eval_loss": 1.452838945388794,
+      "perplexity": 4.275234460254494,
+      "perplexity_overflow": false,
+      "passed": 0,
+      "pass_rate": 0.0
+    },
+    "loss_change": -0.26087781190872184,
+    "status_counts": {
+      "improved": 0,
+      "regressed": 0,
+      "unchanged_pass": 0,
+      "unchanged_fail": 5
+    }
+  },
+  "training": {
+    "global_step": 16,
+    "epoch": 2.0,
+    "training_seconds": 26.983252250007354,
+    "trainable_parameters": 540672,
+    "total_parameters": 494573440,
+    "train_metrics": {
+      "train_runtime": 26.7777,
+      "train_samples_per_second": 2.39,
+      "train_steps_per_second": 0.598,
+      "total_flos": 10705849600512.0,
+      "train_loss": 1.342125866562128,
+      "epoch": 2.0
+    },
+    "log_history": [
+      {
+        "loss": 1.4895521402359009,
+        "grad_norm": 2.2523250579833984,
+        "learning_rate": 0.0,
+        "epoch": 0.125,
+        "step": 1
+      },
+      {
+        "loss": 1.2526553869247437,
+        "grad_norm": 1.9322603940963745,
+        "learning_rate": 0.0002,
+        "epoch": 0.25,
+        "step": 2
+      },
+      {
+        "loss": 1.3682138919830322,
+        "grad_norm": 1.9129823446273804,
+        "learning_rate": 0.0001866666666666667,
+        "epoch": 0.375,
+        "step": 3
+      },
+      {
+        "loss": 1.7540624141693115,
+        "grad_norm": 2.3707921504974365,
+        "learning_rate": 0.00017333333333333334,
+        "epoch": 0.5,
+        "step": 4
+      },
+      {
+        "loss": 1.3866448402404785,
+        "grad_norm": 2.180499792098999,
+        "learning_rate": 0.00016,
+        "epoch": 0.625,
+        "step": 5
+      },
+      {
+        "loss": 1.3394056558609009,
+        "grad_norm": 2.249596118927002,
+        "learning_rate": 0.00014666666666666666,
+        "epoch": 0.75,
+        "step": 6
+      },
+      {
+        "loss": 1.311503291130066,
+        "grad_norm": 1.9845136404037476,
+        "learning_rate": 0.00013333333333333334,
+        "epoch": 0.875,
+        "step": 7
+      },
+      {
+        "loss": 1.4095205068588257,
+        "grad_norm": 2.231135606765747,
+        "learning_rate": 0.00012,
+        "epoch": 1.0,
+        "step": 8
+      },
+      {
+        "eval_loss": 1.5219557285308838,
+        "eval_runtime": 0.7221,
+        "eval_samples_per_second": 6.924,
+        "eval_steps_per_second": 6.924,
+        "epoch": 1.0,
+        "step": 8
+      },
+      {
+        "loss": 1.143856406211853,
+        "grad_norm": 1.672626256942749,
+        "learning_rate": 0.00010666666666666667,
+        "epoch": 1.125,
+        "step": 9
+      },
+      {
+        "loss": 1.5739688873291016,
+        "grad_norm": 2.311051368713379,
+        "learning_rate": 9.333333333333334e-05,
+        "epoch": 1.25,
+        "step": 10
+      },
+      {
+        "loss": 1.9240736961364746,
+        "grad_norm": 3.0752551555633545,
+        "learning_rate": 8e-05,
+        "epoch": 1.375,
+        "step": 11
+      },
+      {
+        "loss": 0.8025346398353577,
+        "grad_norm": 1.3072402477264404,
+        "learning_rate": 6.666666666666667e-05,
+        "epoch": 1.5,
+        "step": 12
+      },
+      {
+        "loss": 1.124639868736267,
+        "grad_norm": 1.6473908424377441,
+        "learning_rate": 5.333333333333333e-05,
+        "epoch": 1.625,
+        "step": 13
+      },
+      {
+        "loss": 1.453439712524414,
+        "grad_norm": 2.072796106338501,
+        "learning_rate": 4e-05,
+        "epoch": 1.75,
+        "step": 14
+      },
+      {
+        "loss": 1.2091227769851685,
+        "grad_norm": 2.385380983352661,
+        "learning_rate": 2.6666666666666667e-05,
+        "epoch": 1.875,
+        "step": 15
+      },
+      {
+        "loss": 0.9308197498321533,
+        "grad_norm": 1.668694257736206,
+        "learning_rate": 1.3333333333333333e-05,
+        "epoch": 2.0,
+        "step": 16
+      },
+      {
+        "eval_loss": 1.4528391361236572,
+        "eval_runtime": 0.7262,
+        "eval_samples_per_second": 6.885,
+        "eval_steps_per_second": 6.885,
+        "epoch": 2.0,
+        "step": 16
+      },
+      {
+        "train_runtime": 26.7777,
+        "train_samples_per_second": 2.39,
+        "train_steps_per_second": 0.598,
+        "total_flos": 10705849600512.0,
+        "train_loss": 1.342125866562128,
+        "epoch": 2.0,
+        "step": 16
+      },
+      {
+        "eval_loss": 1.4528391361236572,
+        "eval_runtime": 0.6983,
+        "eval_samples_per_second": 7.16,
+        "eval_steps_per_second": 7.16,
+        "epoch": 2.0,
+        "step": 16
+      }
+    ]
+  },
+  "artifacts": {
+    "base_model": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/models/base/Qwen2.5-0.5B-Instruct",
+    "adapter": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/models/adapters/support_lora_minimal",
+    "checkpoints": [
+      "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/runs/support_lora_minimal/checkpoint-16"
+    ],
+    "baseline_report": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/reports/baseline_report.json",
+    "tuned_report": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/reports/tuned_report.json"
+  },
+  "conclusion": {
+    "loss_improved": true,
+    "manual_quality_improved": false,
+    "overfitting_detected": false,
+    "text": "Eval loss и perplexity снизились, но ни один ответ не прошёл все ручные критерии; подтверждённого улучшения прикладного качества нет.",
+    "overfitting_analysis": "Eval loss снизился с 1.5220 после первой эпохи до 1.4528 после второй, поэтому явных признаков переобучения в этом запуске нет. Маленький eval не позволяет сделать надёжный общий вывод.",
+    "limitations": [
+      "Eval содержит только пять примеров одной предметной области.",
+      "Ручная бинарная оценка не измеряет частичные улучшения формулировок.",
+      "Проведён один запуск с одним seed и без подбора гиперпараметров.",
+      "Маленькая базовая модель и 32 train-примера ограничивают качество."
+    ],
+    "next_iteration": [
+      "Добавить больше разнообразных train- и eval-примеров для пяти неудачных тем.",
+      "Проверить больше эпох с контролем eval loss и сохранением лучшего checkpoint.",
+      "Сравнить LoRA target modules q_proj/v_proj с q_proj/k_proj/v_proj/o_proj."
+    ]
+  },
+  "comparisons": [
+    {
+      "id": "eval_001",
+      "user_prompt": "Хочу вернуть покупку — что мне нужно сделать?",
+      "reference_answer": "Чтобы оформить возврат, зайдите в раздел «Мои заказы», выберите товар и нажмите «Вернуть». Возврат обрабатывается в течение 5 рабочих дней.",
+      "baseline_answer": "Для вернения товара вы можете:\n\n1. Проверить наличие товара на сайте или в магазине.\n2. Если товар не найден, проверьте его состояние (например, если он был приобретён с недействительным сроком годности).\n3. Если товар находится в наличии и не имеет недостатков, вам нужно отправить его обратно в магазин.\n\nЕсли у вас возникли проблемы с доставкой или вы получили товар с недействительной датой производства, вы можете воспользоваться сервисом \"Мои заказ",
+      "baseline_evaluation": {
+        "passed": false,
+        "reason": "Ответ не описывает возврат через «Мои заказы», содержит нерелевантные проверки наличия и выдуманные условия."
+      },
+      "tuned_answer": "Для вернения товара вы можете:\n\n1. Проверить наличие товара на сайте или в магазине.\n2. Если товар не найден, обратитесь к службе поддержки по телефону или email.\n\nПожалуйста, убедитесь, что товар находится в наличии и не имеет предоплаченных платежей.",
+      "tuned_evaluation": {
+        "passed": false,
+        "reason": "Ответ не описывает возврат через «Мои заказы» и добавляет выдуманные условия о наличии и предоплаченных платежах."
+      },
+      "status": "unchanged_fail"
+    },
+    {
+      "id": "eval_002",
+      "user_prompt": "Подскажите, как проверить, где сейчас мой заказ.",
+      "reference_answer": "Статус заказа доступен в разделе «Мои заказы» на сайте или в приложении.",
+      "baseline_answer": "Для проверки того, где находится ваш заказ, можно использовать следующие методы:\n\n1. **Проверка на сайте**: Начните с проверки на официальном сайте вашего интернет-магазина. Если у вас есть аккаунт, вы можете проверить его на странице \"My Account\" или \"My Orders\".\n\n2. **Веб-сайт доставки**: Попробуйте проверить на официальном сайте доставки. Это может быть сайт вашего магазина или доставочного пункта.\n\n3. **Сообщение от",
+      "baseline_evaluation": {
+        "passed": false,
+        "reason": "Ответ избыточен и предлагает сторонние способы вместо краткого указания раздела «Мои заказы»."
+      },
+      "tuned_answer": "Для проверки того, где находится ваш заказ, вам нужно будет нажать на кнопку \"Показать\" или \"Вернуться к списку\".",
+      "tuned_evaluation": {
+        "passed": false,
+        "reason": "Ответ ссылается на неизвестные кнопки и не сообщает, что статус находится в разделе «Мои заказы»."
+      },
+      "status": "unchanged_fail"
+    },
+    {
+      "id": "eval_003",
+      "user_prompt": "Посылка приехала с дефектом. Как поступить?",
+      "reference_answer": "Пожалуйста, приложите фото повреждения в чате поддержки — мы оформим замену или возврат средств.",
+      "baseline_answer": "Извините, но я не могу помочь с этим запросом.",
+      "baseline_evaluation": {
+        "passed": false,
+        "reason": "Модель отказалась отвечать и не объяснила отправку фото для замены или возврата средств."
+      },
+      "tuned_answer": "Для решения проблемы с доставкой, вам нужно отправить письмо с информацией о проблеме и вашим контактным данным. После получения ответа на вашу заявку, мы начнем процесс доставки.",
+      "tuned_evaluation": {
+        "passed": false,
+        "reason": "Ответ предлагает выдуманную отправку письма с контактами и не упоминает фото, замену или возврат средств."
+      },
+      "status": "unchanged_fail"
+    },
+    {
+      "id": "eval_004",
+      "user_prompt": "По какому графику отвечает поддержка?",
+      "reference_answer": "Служба поддержки работает ежедневно с 9:00 до 21:00 по московскому времени.",
+      "baseline_answer": "В нашем поддержке онлайн-магазина, мы используем различные графики для оценки эффективности работы и качества обслуживания клиентов:\n\n1. **Количество обращений**: Мы можем наблюдать количество обращений с клиентами, которые мы видим на сайте или в социальных сетях.\n\n2. **Средняя длина сообщения**: Мы можем оценивать среднюю длину сообщений, отправленных клиентам.\n\n3. **Размер сообщений**: Мы можем оценивать размер сообщений, отправленных клиентам.\n\n4. **При",
+      "baseline_evaluation": {
+        "passed": false,
+        "reason": "Ответ рассуждает о показателях работы и не называет график поддержки с 9:00 до 21:00."
+      },
+      "tuned_answer": "Поддержка онлайн-магазина работает на различных графиках, включая мобильные приложения и сайты.",
+      "tuned_evaluation": {
+        "passed": false,
+        "reason": "Ответ говорит о приложениях и сайтах вместо ежедневного графика с 9:00 до 21:00 по Москве."
+      },
+      "status": "unchanged_fail"
+    },
+    {
+      "id": "eval_005",
+      "user_prompt": "Обязательно создавать аккаунт перед покупкой?",
+      "reference_answer": "Да, доступно оформление заказа как гостя, без создания аккаунта.",
+      "baseline_answer": "Да, обязательно! Для того чтобы купить товары на нашем сайте, вам нужно будет зарегистрироваться или войти в аккаунт.",
+      "baseline_evaluation": {
+        "passed": false,
+        "reason": "Ответ прямо противоречит правилу: заказ можно оформить гостем без аккаунта."
+      },
+      "tuned_answer": "Да, обязательно! Для того чтобы купить товары на нашем сайте, вам нужно будет зарегистрироваться или войти с учетной записью.",
+      "tuned_evaluation": {
+        "passed": false,
+        "reason": "Ответ по-прежнему прямо противоречит правилу оформления заказа без аккаунта."
+      },
+      "status": "unchanged_fail"
+    }
+  ]
+}

@@ -44,3 +44,12 @@ validate_config:
 
 train config="config/fine_tuning.yaml":
     uv run python -m fine_tuning.train --config {{config}}
+
+evaluate config="config/fine_tuning.yaml":
+    uv run python -m fine_tuning.evaluate --config {{config}}
+
+fine_tune config="config/fine_tuning.yaml":
+    just inspect_env
+    just validate_config
+    just train {{config}}
+    just evaluate {{config}}

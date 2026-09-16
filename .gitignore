@@ -9,8 +9,10 @@ __pycache__/
 .ty_cache/
 .ipynb_checkpoints/
 data/models/base/*
-!data/models/base/.gitkeep
 data/models/adapters/*
-!data/models/adapters/.gitkeep
+!data/models/adapters/support_lora_minimal/
+!data/models/adapters/support_lora_minimal/**
 data/fine_tuning/runs/*
-!data/fine_tuning/runs/.gitkeep
+!data/fine_tuning/runs/support_lora_minimal/
+!data/fine_tuning/runs/support_lora_minimal/checkpoint-16/
+!data/fine_tuning/runs/support_lora_minimal/checkpoint-16/**
