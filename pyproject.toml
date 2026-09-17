@@ -1,0 +1,43 @@
+[project]
+name = "netology-aiagnt-finetuning"
+version = "0.1.0"
+description = "Минимальный локальный LoRA fine-tuning для учебного задания Нетологии"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "accelerate",
+    "huggingface-hub",
+    "peft",
+    "psutil",
+    "pyyaml",
+    "torch",
+    "transformers",
+]
+
+[dependency-groups]
+dev = [
+    "auto-typing-final",
+    "ruff",
+    "ty",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "COM812", # Конфликтует с ruff format.
+    "CPY001", # Для учебного проекта нет владельца copyright.
+    "ISC001", # Конфликтует с ruff format.
+    "RUF001", # Русские строки ожидаемо содержат кириллицу.
+    "RUF002", # Русские docstring ожидаемо содержат кириллицу.
+    "RUF003", # Русские комментарии ожидаемо содержат кириллицу.
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
