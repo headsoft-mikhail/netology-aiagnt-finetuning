@@ -1,12 +1,8 @@
 {
-  "schema_version": 1,
   "stage": "baseline",
   "model": "Qwen/Qwen2.5-0.5B-Instruct",
-  "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
-  "seed": 42,
-  "device": "mps",
-  "dtype": "float32",
   "eval_loss": 1.7137167572975158,
+  "perplexity": 5.5495495222254,
   "generation": {
     "do_sample": false,
     "max_new_tokens": 128

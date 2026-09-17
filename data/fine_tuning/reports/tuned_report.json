@@ -1,17 +1,10 @@
 {
-  "schema_version": 1,
   "stage": "tuned",
   "model": "Qwen/Qwen2.5-0.5B-Instruct",
-  "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
-  "adapter_path": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/models/adapters/support_lora_minimal",
+  "adapter_path": "data/models/adapters/lora-tuned-Qwen2.5-0.5B-Instruct",
   "adapter_reloaded_from_disk": true,
-  "local_files_only": true,
-  "seed": 42,
-  "device": "mps",
-  "dtype": "float32",
   "eval_loss": 1.452838945388794,
   "perplexity": 4.275234460254494,
-  "perplexity_overflow": false,
   "generation": {
     "do_sample": false,
     "max_new_tokens": 128

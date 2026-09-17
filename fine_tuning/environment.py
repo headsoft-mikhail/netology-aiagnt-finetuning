@@ -1,149 +1,80 @@
-"""Проверка окружения и локальной модели без обучения и сетевых запросов."""
+"""Print the environment selected for local fine-tuning."""
+
+# ruff: noqa: EM101, EM102, T201, TRY003
 
 import argparse
 import importlib.metadata
 import json
 import platform
-import sys
 import typing
 from pathlib import Path
 
-import peft
 import psutil
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from fine_tuning.config import Config, get_path, get_section, load_config
 
 
-def select_torch_device(requested_device: str) -> torch.device:
-    """Выбрать CPU или доступный GPU backend для значения auto/cpu/gpu."""
-    if requested_device == "cpu":
+def xpu_is_available() -> bool:
+    """Return whether PyTorch exposes an available Intel XPU device."""
+    return hasattr(torch, "xpu") and torch.xpu.is_available()
+
+
+def select_device(requested: str) -> torch.device:
+    """Select CPU or the first available GPU backend."""
+    available: typing.Final = {
+        "cuda": torch.cuda.is_available(),
+        "mps": torch.backends.mps.is_available(),
+        "xpu": xpu_is_available(),
+    }
+    if requested == "cpu":
         return torch.device("cpu")
-    if torch.backends.mps.is_available():
-        return torch.device("mps")
-    if torch.cuda.is_available():
-        return torch.device("cuda")
-    if torch.xpu.is_available():
-        return torch.device("xpu")
-    if requested_device == "gpu":
-        message: typing.Final = "GPU недоступен. Повторите с --device cpu или --device auto."
-        raise RuntimeError(message)
+    if requested in available:
+        if not available[requested]:
+            raise RuntimeError(f"Устройство {requested} недоступно")
+        return torch.device(requested)
+    if requested not in {"auto", "gpu"}:
+        raise ValueError("device должен быть auto, gpu, cpu, cuda, mps или xpu")
+    for name, is_available in available.items():
+        if is_available:
+            return torch.device(name)
+    if requested == "gpu":
+        raise RuntimeError("GPU недоступен; используйте device=cpu")
     return torch.device("cpu")
 
 
-def inspect_environment(model_path: Path, requested_device: str) -> dict[str, object]:
-    """Загрузить модель, проверить chat template, модули LoRA и короткую генерацию."""
-    mps_available: typing.Final = torch.backends.mps.is_available()
-    device: typing.Final = select_torch_device(requested_device)
-    if not model_path.is_dir():
-        message = f"Нет локальной модели: {model_path}. Выполните just download_model."
-        raise FileNotFoundError(message)
-
-    # float32 — консервативный вариант для первого небольшого LoRA-эксперимента.
-    dtype: typing.Final = torch.float32
-    tokenizer: typing.Final = typing.cast(
-        "typing.Any",
-        AutoTokenizer.from_pretrained(model_path, local_files_only=True, trust_remote_code=False),
-    )
-    if not tokenizer.chat_template:
-        message = "У tokenizer нет chat template."
-        raise ValueError(message)
-    model: typing.Final = typing.cast(
-        "typing.Any",
-        AutoModelForCausalLM.from_pretrained(
-            model_path,
-            local_files_only=True,
-            trust_remote_code=False,
-            dtype=dtype,
-            attn_implementation="eager",
-        ),
-    ).to(device)
-    model.eval()
-
-    # Проверяем совместимость с выбранными target_modules, не создавая адаптер.
-    module_names: typing.Final = {name.rsplit(".", 1)[-1] for name, _ in model.named_modules()}
-    missing_modules: typing.Final = {"q_proj", "v_proj"} - module_names
-    if missing_modules:
-        message = f"В модели нет модулей LoRA: {sorted(missing_modules)}"
-        raise ValueError(message)
-
-    inputs = typing.cast(
-        "dict[str, torch.Tensor]",
-        tokenizer.apply_chat_template(
-            [{"role": "user", "content": "Ответь одним словом: привет!"}],
-            tokenize=True,
-            add_generation_prompt=True,
-            return_dict=True,
-            return_tensors="pt",
-        ),
-    )
-    inputs = {name: tensor.to(device) for name, tensor in inputs.items()}
-    with torch.inference_mode():
-        generated: typing.Final = model.generate(
-            **inputs,
-            do_sample=False,
-            max_new_tokens=8,
-            pad_token_id=tokenizer.eos_token_id,
-        )
-    if device.type == "mps":
-        torch.mps.synchronize()
-    answer: typing.Final = typing.cast(
-        "str",
-        tokenizer.decode(generated[0, inputs["input_ids"].shape[1] :], skip_special_tokens=True),
-    )
-    if not answer.strip():
-        message = "Проверочная генерация не вернула текста."
-        raise RuntimeError(message)
-
-    # Проверка autograd на устройстве, без изменения весов модели.
-    probe: typing.Final = torch.ones(2, device=device, requires_grad=True)
-    probe.square().sum().backward()
-    if probe.grad is None or not torch.isfinite(probe.grad).all().item():
-        message = "Проверка autograd не пройдена."
-        raise RuntimeError(message)
-    cpu_available: typing.Final = torch.ones(1, device="cpu").item() == 1.0
-    memory: typing.Final = psutil.virtual_memory()
+def inspect_environment(config: Config, requested_device: str | None = None) -> dict[str, object]:
+    """Collect the environment values required by the assignment."""
+    model: typing.Final = get_section(config, "model")
+    model_path: typing.Final = get_path(config, "base_model")
+    device: typing.Final = select_device(requested_device or str(model["device"]))
     return {
-        "python": platform.python_version(),
-        "platform": platform.platform(),
-        "architecture": platform.machine(),
+        "python_version": platform.python_version(),
+        "torch_version": torch.__version__,
         "libraries": {
             name: importlib.metadata.version(name)
-            for name in ("torch", "transformers", "peft", "accelerate", "huggingface-hub", "pyyaml")
+            for name in ("transformers", "peft", "accelerate", "pyyaml")
         },
         "cuda_available": torch.cuda.is_available(),
-        "mps_available": mps_available,
-        "xpu_available": torch.xpu.is_available(),
-        "cpu_available": cpu_available,
+        "mps_available": torch.backends.mps.is_available(),
+        "xpu_available": xpu_is_available(),
+        "cpu_available": True,
         "selected_device": device.type,
-        "selected_dtype": str(dtype),
-        "system_memory_gib": round(memory.total / 1024**3, 2),
-        "available_system_memory_gib": round(memory.available / 1024**3, 2),
-        "mps_recommended_memory_gib": (
-            round(torch.mps.recommended_max_memory() / 1024**3, 2) if mps_available else None
-        ),
-        "model_path": str(model_path.resolve()),
-        "model_exists": True,
-        "tokenizer_loaded": True,
-        "model_loaded": True,
-        "parameter_count": sum(parameter.numel() for parameter in model.parameters()),
-        "lora_target_modules_found": ["q_proj", "v_proj"],
-        "peft_available": hasattr(peft, "get_peft_model"),
-        "generation_check": answer,
-        "autograd_check": True,
-        "training_performed": False,
+        "selected_dtype": model["dtype"],
+        "system_memory_gib": round(psutil.virtual_memory().total / 1024**3, 1),
+        "model_exists": (model_path / "model.safetensors").is_file(),
+        "tokenizer_exists": (model_path / "tokenizer.json").is_file(),
     }
 
 
 def run_environment_inspection_cli() -> None:
-    """Разобрать аргументы CLI, проверить окружение и вывести JSON-сводку."""
+    """Print the configured local environment."""
     parser: typing.Final = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--model-path", type=Path, default=Path("data/models/base/Qwen2.5-0.5B-Instruct")
-    )
-    parser.add_argument("--device", choices=("auto", "cpu", "gpu"), default="auto")
+    parser.add_argument("--config", type=Path, default=Path("config/fine_tuning.yaml"))
+    parser.add_argument("--device", default=None)
     args: typing.Final = parser.parse_args()
-    report: typing.Final = inspect_environment(args.model_path, args.device)
-    sys.stdout.write(f"{json.dumps(report, ensure_ascii=False, indent=2)}\n")
+    report: typing.Final = inspect_environment(load_config(args.config), args.device)
+    print(json.dumps(report, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

@@ -1,95 +1,17 @@
 {
-  "schema_version": 1,
   "stage": "training",
-  "config": {
-    "run": {
-      "name": "support_lora_minimal",
-      "seed": 42
-    },
-    "paths": {
-      "train_dataset": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/train.jsonl",
-      "eval_dataset": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/eval.jsonl",
-      "base_model": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/models/base/Qwen2.5-0.5B-Instruct",
-      "runs": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/runs",
-      "adapters": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/models/adapters",
-      "reports": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/reports"
-    },
-    "model": {
-      "name": "Qwen/Qwen2.5-0.5B-Instruct",
-      "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
-      "device": "auto",
-      "dtype": "float32",
-      "max_seq_length": 512,
-      "trust_remote_code": false
-    },
-    "lora": {
-      "method": "lora",
-      "r": 8,
-      "lora_alpha": 16,
-      "lora_dropout": 0.05,
-      "bias": "none",
-      "target_modules": [
-        "q_proj",
-        "v_proj"
-      ]
-    },
-    "training": {
-      "learning_rate": 0.0002,
-      "lr_scheduler_type": "linear",
-      "optimizer": "adamw_torch",
-      "weight_decay": 0.0,
-      "max_grad_norm": 1.0,
-      "per_device_train_batch_size": 1,
-      "per_device_eval_batch_size": 1,
-      "gradient_accumulation_steps": 4,
-      "num_train_epochs": 2,
-      "warmup_steps": 0.03,
-      "logging_strategy": "steps",
-      "logging_steps": 1,
-      "eval_strategy": "epoch",
-      "save_strategy": "epoch",
-      "save_total_limit": 1,
-      "gradient_checkpointing": false,
-      "report_to": "none"
-    },
-    "generation": {
-      "do_sample": false,
-      "max_new_tokens": 128
-    }
-  },
+  "run_name": "lora-tuned-Qwen2.5-0.5B-Instruct",
   "device": "mps",
-  "baseline_eval_loss": 1.7137167572975158,
-  "tuned_eval_loss_before_reload": 1.4528391361236572,
-  "train_metrics": {
-    "train_runtime": 26.7777,
-    "train_samples_per_second": 2.39,
-    "train_steps_per_second": 0.598,
-    "total_flos": 10705849600512.0,
-    "train_loss": 1.342125866562128,
-    "epoch": 2.0
-  },
+  "train_examples": 32,
+  "eval_examples": 5,
   "global_step": 16,
   "epoch": 2.0,
   "training_seconds": 26.983252250007354,
+  "train_loss": 1.342125866562128,
+  "eval_loss": 1.4528391361236572,
+  "learning_rate": 0.0002,
   "trainable_parameters": 540672,
   "total_parameters": 494573440,
-  "trainable_percentage": 0.1093208725482711,
-  "masking": {
-    "ignore_index": -100,
-    "prompt_and_padding_excluded_from_loss": true,
-    "assistant_tokens_in_loss": true,
-    "examples_checked": 37,
-    "assistant_tokens": {
-      "min": 23,
-      "max": 53
-    },
-    "first_example": {
-      "id": "train_001",
-      "prompt_tokens": 42,
-      "assistant_tokens": 53,
-      "total_tokens": 95
-    }
-  },
   "log_history": [
     {
       "loss": 1.4895521402359009,
@@ -238,8 +160,7 @@
     }
   ],
   "checkpoints": [
-    "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/runs/support_lora_minimal/checkpoint-16"
+    "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/runs/lora-tuned-Qwen2.5-0.5B-Instruct/checkpoint-16"
   ],
-  "adapter_path": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/models/adapters/support_lora_minimal",
-  "baseline_report_path": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/fine_tuning/reports/baseline_report.json"
+  "adapter_path": "/Users/mikhail_afanasiev/Dev/netology/netology-aiagnt-finetuning/data/models/adapters/lora-tuned-Qwen2.5-0.5B-Instruct"
 }

@@ -1,18 +1,19 @@
 .DS_Store
 .venv/
-.env
-.env.*
-!.env.example
 __pycache__/
 *.py[cod]
 .ruff_cache/
 .ty_cache/
-.ipynb_checkpoints/
-data/models/base/*
+
+# Базовая модель скачивается локально. В Git добавляется только итоговый adapter.
+data/models/*
+!data/models/adapters/
 data/models/adapters/*
-!data/models/adapters/support_lora_minimal/
-!data/models/adapters/support_lora_minimal/**
+!data/models/adapters/lora-tuned-Qwen2.5-0.5B-Instruct/
+!data/models/adapters/lora-tuned-Qwen2.5-0.5B-Instruct/**
+
+# В Git хранится только checkpoint итогового учебного запуска.
 data/fine_tuning/runs/*
-!data/fine_tuning/runs/support_lora_minimal/
-!data/fine_tuning/runs/support_lora_minimal/checkpoint-16/
-!data/fine_tuning/runs/support_lora_minimal/checkpoint-16/**
+!data/fine_tuning/runs/lora-tuned-Qwen2.5-0.5B-Instruct/
+!data/fine_tuning/runs/lora-tuned-Qwen2.5-0.5B-Instruct/checkpoint-16/
+!data/fine_tuning/runs/lora-tuned-Qwen2.5-0.5B-Instruct/checkpoint-16/**

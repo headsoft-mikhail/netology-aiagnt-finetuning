@@ -1,5 +1,5 @@
 run:
-  name: support_lora_minimal
+  name: lora-tuned-Qwen2.5-0.5B-Instruct
   seed: 42
 
 paths:
@@ -30,22 +30,14 @@ lora:
 
 training:
   learning_rate: 0.0002
-  lr_scheduler_type: linear
-  optimizer: adamw_torch
-  weight_decay: 0.0
-  max_grad_norm: 1.0
   per_device_train_batch_size: 1
   per_device_eval_batch_size: 1
   gradient_accumulation_steps: 4
   num_train_epochs: 2
-  warmup_steps: 0.03
-  logging_strategy: steps
   logging_steps: 1
   eval_strategy: epoch
   save_strategy: epoch
   save_total_limit: 1
-  gradient_checkpointing: false
-  report_to: none
 
 generation:
   do_sample: false

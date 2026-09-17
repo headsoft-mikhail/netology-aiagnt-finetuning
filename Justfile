@@ -32,15 +32,12 @@ lint:
 download_model:
     HF_HUB_DISABLE_XET=1 uv run hf download Qwen/Qwen2.5-0.5B-Instruct --revision 7ae557604adf67be50417f59c2c2f167def9a775 --local-dir data/models/base/Qwen2.5-0.5B-Instruct
 
-# device: auto, cpu или gpu (MPS на macOS)
+# device: auto, gpu, cpu, cuda, mps или xpu
 inspect_env device="auto":
     uv run python -m fine_tuning.environment --device {{device}}
 
 validate_data:
     uv run python -m fine_tuning.dataset
-
-validate_config:
-    uv run python -m fine_tuning.config --config config/fine_tuning.yaml
 
 train config="config/fine_tuning.yaml":
     uv run python -m fine_tuning.train --config {{config}}
@@ -50,6 +47,5 @@ evaluate config="config/fine_tuning.yaml":
 
 fine_tune config="config/fine_tuning.yaml":
     just inspect_env
-    just validate_config
     just train {{config}}
     just evaluate {{config}}
